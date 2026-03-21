@@ -79,16 +79,6 @@ export function HeroSection() {
         </svg>
       </div>
 
-      {/* Glow orb behind coin */}
-      <div
-        className="absolute top-[22%] left-1/2 -translate-x-1/2 w-64 h-64 rounded-full pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(circle, oklch(0.76 0.10 82 / 0.18) 0%, transparent 70%)",
-          zIndex: 2,
-        }}
-      />
-
       {/* Content */}
       <div
         className="relative flex flex-col items-center text-center px-4 py-24"
@@ -97,18 +87,24 @@ export function HeroSection() {
         {/* Coin logo */}
         <motion.div
           initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
+          animate={{ scale: 1, opacity: 1, y: [0, -14, 0] }}
+          transition={{
+            scale: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] },
+            opacity: { duration: 0.8 },
+            y: {
+              duration: 3,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+              delay: 0.8,
+            },
+          }}
           className="mb-8"
         >
-          <div className="relative inline-block">
-            <div className="absolute inset-0 rounded-full glow-gold animate-pulse-glow" />
-            <img
-              src="/assets/uploads/63C52A3F-5360-4A0B-82AB-3B4D9B931E46-2.png"
-              alt="FORG Coin"
-              className="w-32 h-32 md:w-44 md:h-44 relative z-10 shadow-gold"
-            />
-          </div>
+          <img
+            src="/assets/uploads/63C52A3F-5360-4A0B-82AB-3B4D9B931E46-2.png"
+            alt="FORG Coin"
+            className="w-32 h-32 md:w-44 md:h-44"
+          />
         </motion.div>
 
         {/* Headline */}
