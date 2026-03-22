@@ -1,22 +1,6 @@
 import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
 
-interface Frog {
-  x: number;
-  y: number;
-  targetX: number;
-  targetY: number;
-  startX: number;
-  startY: number;
-  progress: number;
-  speed: number;
-  size: number;
-  isMascot: boolean;
-  jumpCount: number;
-  waiting: number;
-  phase: "jump" | "wait";
-}
-
 interface Firefly {
   x: number;
   y: number;
@@ -49,14 +33,48 @@ interface LilyPad {
 
 export function PondEcosystem() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mascotImgRef = useRef<HTMLImageElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const leftGifRef = useRef<HTMLImageElement>(null);
+  const rightGifRef = useRef<HTMLImageElement>(null);
 
+  // Store lily pad refs for position sync
+  const mascotPadLeftRef = useRef<LilyPad | null>(null);
+  const mascotPadRightRef = useRef<LilyPad | null>(null);
+  const tRef = useRef(0);
+
+  // Sync GIF overlay positions each animation frame
   useEffect(() => {
-    const img = new Image();
-    img.src = "/assets/uploads/F8DA6749-9BC2-45C6-A9D9-E260117430FC-1.jpg";
-    img.onload = () => {
-      mascotImgRef.current = img;
+    let rafId: number;
+    const sync = () => {
+      const canvas = canvasRef.current;
+      const container = containerRef.current;
+      const leftImg = leftGifRef.current;
+      const rightImg = rightGifRef.current;
+      if (canvas && container && leftImg && rightImg) {
+        const t = tRef.current;
+        const H = canvas.offsetHeight;
+        const WATER_Y = H * 0.55;
+        const updateImg = (img: HTMLImageElement, lp: LilyPad | null) => {
+          if (!lp) return;
+          const bob = Math.sin(t * lp.bobSpeed * 0.05 + lp.bobOffset) * 2;
+          const padY = lp.y + bob;
+          const s = lp.r * 2.2;
+          const left = lp.x - s / 2;
+          const top = padY - lp.r * 0.55 - s / 2;
+          img.style.left = `${left}px`;
+          img.style.top = `${top}px`;
+          img.style.width = `${s}px`;
+          img.style.height = `${s}px`;
+          // Hide if lily pad is below water (shouldn't happen but safety)
+          img.style.opacity = padY > WATER_Y + 40 ? "0" : "1";
+        };
+        updateImg(leftImg, mascotPadLeftRef.current);
+        updateImg(rightImg, mascotPadRightRef.current);
+      }
+      rafId = requestAnimationFrame(sync);
     };
+    rafId = requestAnimationFrame(sync);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   useEffect(() => {
@@ -68,8 +86,6 @@ export function PondEcosystem() {
     let W = 0;
     let H = 0;
     let t = 0;
-    let mascotTwerk = 0;
-    let mascotTwerkTimer = 0;
 
     const resize = () => {
       W = canvas.offsetWidth;
@@ -80,7 +96,6 @@ export function PondEcosystem() {
     };
 
     const lilyPads: LilyPad[] = [];
-    const frogs: Frog[] = [];
     const fireflies: Firefly[] = [];
     const particles: Particle[] = [];
 
@@ -88,42 +103,40 @@ export function PondEcosystem() {
 
     function initScene() {
       lilyPads.length = 0;
-      frogs.length = 0;
       fireflies.length = 0;
       particles.length = 0;
+      mascotPadLeftRef.current = null;
+      mascotPadRightRef.current = null;
 
       const wy = WATER_Y();
 
-      // Lily pads
-      for (let i = 0; i < 7; i++) {
+      // Lily pads - ensure leftmost is well on the left, rightmost well on the right
+      lilyPads.push({
+        x: W * 0.12,
+        y: wy + 30 + Math.random() * 40,
+        r: 32 + Math.random() * 10,
+        bobOffset: Math.random() * Math.PI * 2,
+        bobSpeed: 0.3 + Math.random() * 0.3,
+      });
+      lilyPads.push({
+        x: W * 0.88,
+        y: wy + 30 + Math.random() * 40,
+        r: 32 + Math.random() * 10,
+        bobOffset: Math.random() * Math.PI * 2,
+        bobSpeed: 0.3 + Math.random() * 0.3,
+      });
+      for (let i = 0; i < 5; i++) {
         lilyPads.push({
-          x: W * (0.1 + i * 0.12 + Math.random() * 0.05),
+          x: W * (0.25 + i * 0.11 + Math.random() * 0.05),
           y: wy + Math.random() * 80,
-          r: 20 + Math.random() * 18,
+          r: 22 + Math.random() * 14,
           bobOffset: Math.random() * Math.PI * 2,
           bobSpeed: 0.3 + Math.random() * 0.4,
         });
       }
 
-      // Frogs
-      for (let i = 0; i < 4; i++) {
-        const lp = lilyPads[i % lilyPads.length];
-        frogs.push({
-          x: lp.x,
-          y: lp.y,
-          targetX: lp.x,
-          targetY: lp.y,
-          startX: lp.x,
-          startY: lp.y,
-          progress: 1,
-          speed: 0.008 + Math.random() * 0.006,
-          size: 14 + Math.random() * 8,
-          isMascot: i === 0,
-          jumpCount: i * 4,
-          waiting: Math.random() * 120,
-          phase: "wait",
-        });
-      }
+      mascotPadLeftRef.current = lilyPads[0];
+      mascotPadRightRef.current = lilyPads[1];
 
       // Fireflies
       for (let i = 0; i < 18; i++) {
@@ -143,7 +156,6 @@ export function PondEcosystem() {
       if (particles.length < 40 && Math.random() < 0.15) {
         const wy = WATER_Y();
         if (Math.random() < 0.7) {
-          // bubble
           particles.push({
             x: W * 0.05 + Math.random() * W * 0.9,
             y: wy + 80 + Math.random() * 60,
@@ -156,7 +168,6 @@ export function PondEcosystem() {
             rotationSpeed: 0,
           });
         } else {
-          // leaf
           particles.push({
             x:
               Math.random() < 0.5
@@ -177,7 +188,6 @@ export function PondEcosystem() {
 
     function drawBackground() {
       const wy = WATER_Y();
-      // Night sky gradient
       const skyGrad = ctx.createLinearGradient(0, 0, 0, wy);
       skyGrad.addColorStop(0, "oklch(0.06 0.025 250)");
       skyGrad.addColorStop(0.5, "oklch(0.09 0.02 240)");
@@ -185,7 +195,6 @@ export function PondEcosystem() {
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, W, wy);
 
-      // Moon glow
       const moonX = W * 0.75;
       const moonY = H * 0.12;
       const moonGlow = ctx.createRadialGradient(
@@ -206,11 +215,9 @@ export function PondEcosystem() {
       ctx.fillStyle = "rgba(255, 248, 200, 0.9)";
       ctx.fill();
 
-      // Silhouetted trees left
       drawTrees(ctx, W, H, wy, "left");
       drawTrees(ctx, W, H, wy, "right");
 
-      // Ground between trees and water
       const groundGrad = ctx.createLinearGradient(0, wy - 30, 0, wy + 20);
       groundGrad.addColorStop(0, "oklch(0.12 0.04 145)");
       groundGrad.addColorStop(1, "oklch(0.15 0.05 175)");
@@ -226,7 +233,6 @@ export function PondEcosystem() {
       ctx.closePath();
       ctx.fill();
 
-      // Water
       drawWater(ctx, W, H, wy, t);
     }
 
@@ -243,18 +249,15 @@ export function PondEcosystem() {
         { xFrac: 0.11, h: 160, w: 38 },
         { xFrac: 0.15, h: 200, w: 48 },
       ];
-
       ctx.fillStyle = "oklch(0.09 0.025 150)";
       for (const tree of treeData) {
-        let cx = side === "left" ? W * tree.xFrac : W * (1 - tree.xFrac);
-        // Triangle tree
+        const cx = side === "left" ? W * tree.xFrac : W * (1 - tree.xFrac);
         ctx.beginPath();
         ctx.moveTo(cx, wy - tree.h);
         ctx.lineTo(cx - tree.w / 2, wy);
         ctx.lineTo(cx + tree.w / 2, wy);
         ctx.closePath();
         ctx.fill();
-        // Second tier
         ctx.beginPath();
         ctx.moveTo(cx, wy - tree.h * 0.7);
         ctx.lineTo(cx - tree.w * 0.65, wy - tree.h * 0.25);
@@ -271,7 +274,6 @@ export function PondEcosystem() {
       wy: number,
       t: number,
     ) {
-      // Main water body
       const waterGrad = ctx.createLinearGradient(0, wy, 0, H);
       waterGrad.addColorStop(0, "oklch(0.28 0.08 200)");
       waterGrad.addColorStop(0.3, "oklch(0.22 0.07 195)");
@@ -290,7 +292,6 @@ export function PondEcosystem() {
       ctx.closePath();
       ctx.fill();
 
-      // Water shimmer lines
       ctx.strokeStyle = "rgba(57, 183, 198, 0.15)";
       ctx.lineWidth = 1;
       for (let i = 0; i < 8; i++) {
@@ -304,7 +305,6 @@ export function PondEcosystem() {
         ctx.stroke();
       }
 
-      // Water caustic shimmer
       for (let i = 0; i < 6; i++) {
         const cx = W * (0.1 + (i * 0.15 + Math.sin(t * 0.01 + i) * 0.05));
         const cy = wy + 30 + (i % 3) * 40;
@@ -334,7 +334,7 @@ export function PondEcosystem() {
         ctx.fillStyle = "oklch(0.42 0.14 145)";
         ctx.fill();
 
-        // Notch darker
+        // Notch
         ctx.beginPath();
         ctx.moveTo(lp.x, y);
         ctx.arc(lp.x, y, lp.r, -0.15, 0.15);
@@ -355,126 +355,12 @@ export function PondEcosystem() {
           ctx.stroke();
         }
 
-        // Flower
+        // Flower for large pads
         if (lp.r > 28) {
           ctx.beginPath();
           ctx.arc(lp.x, y - lp.r * 0.1, 4, 0, Math.PI * 2);
           ctx.fillStyle = "oklch(0.85 0.12 10)";
           ctx.fill();
-        }
-      }
-    }
-
-    function drawCartoonFrog(cx: number, cy: number, size: number) {
-      const s = size;
-      // Body
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, s * 0.8, s * 0.65, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "oklch(0.55 0.17 145)";
-      ctx.fill();
-      ctx.strokeStyle = "oklch(0.40 0.15 140)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Belly
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + s * 0.1, s * 0.45, s * 0.38, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "oklch(0.78 0.12 120)";
-      ctx.fill();
-
-      // Eyes
-      for (let e = -1; e <= 1; e += 2) {
-        ctx.beginPath();
-        ctx.arc(cx + e * s * 0.35, cy - s * 0.55, s * 0.22, 0, Math.PI * 2);
-        ctx.fillStyle = "oklch(0.55 0.17 145)";
-        ctx.fill();
-        ctx.strokeStyle = "oklch(0.40 0.15 140)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(cx + e * s * 0.35, cy - s * 0.55, s * 0.14, 0, Math.PI * 2);
-        ctx.fillStyle = "#111";
-        ctx.fill();
-
-        // Eye gleam
-        ctx.beginPath();
-        ctx.arc(
-          cx + e * s * 0.35 + s * 0.05,
-          cy - s * 0.58,
-          s * 0.05,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.fill();
-      }
-
-      // Smile
-      ctx.beginPath();
-      ctx.arc(cx, cy + s * 0.05, s * 0.3, 0.2, Math.PI - 0.2);
-      ctx.strokeStyle = "oklch(0.30 0.12 140)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
-    function drawFrogs(t: number) {
-      const wy = WATER_Y();
-
-      for (const frog of frogs) {
-        if (frog.phase === "wait") {
-          frog.waiting--;
-          if (frog.waiting <= 0) {
-            // Pick a random lily pad as target
-            const lpTarget =
-              lilyPads[Math.floor(Math.random() * lilyPads.length)];
-            frog.startX = frog.x;
-            frog.startY = frog.y;
-            frog.targetX = lpTarget.x + (Math.random() - 0.5) * 30;
-            frog.targetY =
-              lpTarget.y +
-              Math.sin(t * lpTarget.bobSpeed * 0.05 + lpTarget.bobOffset) * 2;
-            frog.progress = 0;
-            frog.phase = "jump";
-            frog.jumpCount++;
-          }
-        } else {
-          frog.progress += frog.speed;
-          if (frog.progress >= 1) {
-            frog.progress = 1;
-            frog.x = frog.targetX;
-            frog.y = frog.targetY;
-            frog.phase = "wait";
-            frog.waiting = 60 + Math.random() * 120;
-          } else {
-            frog.x = frog.startX + (frog.targetX - frog.startX) * frog.progress;
-            const arcHeight = 50 + Math.abs(frog.targetX - frog.startX) * 0.3;
-            const arc = Math.sin(frog.progress * Math.PI) * arcHeight;
-            frog.y =
-              frog.startY + (frog.targetY - frog.startY) * frog.progress - arc;
-          }
-        }
-
-        if (frog.y < wy - 5) continue; // don't draw if airborne above water
-
-        const shouldUseMascot = frog.isMascot || frog.jumpCount % 4 === 0;
-
-        if (shouldUseMascot && mascotImgRef.current) {
-          const s = frog.size * 2.5;
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(frog.x, frog.y, s, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(
-            mascotImgRef.current,
-            frog.x - s,
-            frog.y - s,
-            s * 2,
-            s * 2,
-          );
-          ctx.restore();
-        } else {
-          drawCartoonFrog(frog.x, frog.y, frog.size);
         }
       }
     }
@@ -492,14 +378,11 @@ export function PondEcosystem() {
           ff.alpha = 0.05;
           ff.alphaDir = 0.008 + Math.random() * 0.008;
         }
-
-        // Wrap
         if (ff.x < 0) ff.x = W;
         if (ff.x > W) ff.x = 0;
         if (ff.y < 5) ff.vy = Math.abs(ff.vy);
         if (ff.y > WATER_Y() - 10) ff.vy = -Math.abs(ff.vy);
 
-        // Glow
         const glow = ctx.createRadialGradient(
           ff.x,
           ff.y,
@@ -515,7 +398,6 @@ export function PondEcosystem() {
         ctx.beginPath();
         ctx.arc(ff.x, ff.y, ff.r * 5, 0, Math.PI * 2);
         ctx.fill();
-
         ctx.beginPath();
         ctx.arc(ff.x, ff.y, ff.r, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 248, 120, ${ff.alpha})`;
@@ -542,7 +424,6 @@ export function PondEcosystem() {
           ctx.lineWidth = 1;
           ctx.stroke();
         } else {
-          // leaf
           p.alpha -= 0.004;
           if (p.y > WATER_Y() + 20 || p.alpha <= 0) {
             particles.splice(i, 1);
@@ -560,47 +441,15 @@ export function PondEcosystem() {
       }
     }
 
-    function drawMascotTwerk(t: number) {
-      // Every ~600 frames trigger twerk
-      if (t % 600 < 5 && mascotTwerk === 0) {
-        mascotTwerk = 80;
-      }
-
-      if (mascotTwerk > 0 && mascotImgRef.current) {
-        mascotTwerkTimer++;
-        const bounce = Math.sin(mascotTwerkTimer * 0.4) * 12;
-        const wobble = Math.sin(mascotTwerkTimer * 0.5) * 0.15;
-        const s = 55;
-        ctx.save();
-        ctx.translate(W - 80, H - 80 + bounce);
-        ctx.rotate(wobble);
-        ctx.beginPath();
-        ctx.arc(0, 0, s, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(mascotImgRef.current, -s, -s, s * 2, s * 2);
-        ctx.restore();
-
-        // Label
-        ctx.fillStyle = `rgba(215, 179, 90, ${Math.min(mascotTwerk / 20, 1)})`;
-        ctx.font = "bold 12px 'Plus Jakarta Sans', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("FORG PARTY! 🎉", W - 80, H - 145);
-
-        mascotTwerk--;
-        if (mascotTwerk === 0) mascotTwerkTimer = 0;
-      }
-    }
-
     const draw = () => {
       t++;
+      tRef.current = t;
       spawnParticle();
       ctx.clearRect(0, 0, W, H);
       drawBackground();
       drawLilyPads(t);
       drawParticles();
-      drawFrogs(t);
       drawFireflies(t);
-      drawMascotTwerk(t);
       raf = requestAnimationFrame(draw);
     };
 
@@ -616,6 +465,7 @@ export function PondEcosystem() {
 
   return (
     <section
+      ref={containerRef}
       className="relative w-full overflow-hidden"
       style={{ minHeight: 640 }}
     >
@@ -625,9 +475,35 @@ export function PondEcosystem() {
         className="w-full block"
         style={{ height: 640 }}
       />
+      {/* Animated GIF mascots on lily pads */}
+      <img
+        ref={leftGifRef}
+        src="/assets/uploads/ezgif.com-video-to-gif-converter-1.gif"
+        alt="FORG mascot"
+        className="absolute pointer-events-none"
+        style={{
+          position: "absolute",
+          imageRendering: "auto",
+          objectFit: "contain",
+          zIndex: 5,
+          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.5))",
+        }}
+      />
+      <img
+        ref={rightGifRef}
+        src="/assets/uploads/ezgif.com-video-to-gif-converter-1.gif"
+        alt="FORG mascot"
+        className="absolute pointer-events-none"
+        style={{
+          position: "absolute",
+          imageRendering: "auto",
+          objectFit: "contain",
+          zIndex: 5,
+          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.5))",
+        }}
+      />
       <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[oklch(0.10_0.022_240)] to-transparent z-10 pointer-events-none" />
 
-      {/* Label */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
