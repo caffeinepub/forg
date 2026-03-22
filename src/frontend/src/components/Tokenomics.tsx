@@ -1,34 +1,48 @@
-import { CheckCircle2, Lock } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
 
 const PIE_DATA = [
-  { label: "Liquidity", pct: 40, color: "oklch(0.72 0.10 200)" },
-  { label: "Community", pct: 30, color: "oklch(0.65 0.15 145)" },
-  { label: "Marketing", pct: 20, color: "oklch(0.76 0.10 82)" },
-  { label: "Team", pct: 10, color: "oklch(0.55 0.12 260)" },
+  { label: "Frogs", pct: 40, color: "oklch(0.72 0.10 200)" },
+  { label: "Pond Liquidity", pct: 30, color: "oklch(0.65 0.15 145)" },
+  { label: "Community Degens", pct: 20, color: "oklch(0.76 0.10 82)" },
+  { label: "Memes", pct: 9, color: "oklch(0.55 0.12 260)" },
+  {
+    label: "The frog who started it all",
+    pct: 1,
+    color: "oklch(0.70 0.18 30)",
+  },
 ];
 
 const STATS = [
-  { label: "Total Supply", value: "1,000,000,000", suffix: "$FORG" },
-  { label: "Ticker", value: "$FORG", suffix: "" },
-  { label: "Network", value: "Solana", suffix: "" },
-  { label: "Contract", value: "TBA", suffix: "" },
+  {
+    label: "Frogs",
+    value: "40%",
+    suffix: "",
+  },
+  {
+    label: "Pond Liquidity",
+    value: "30%",
+    suffix: "",
+  },
+  {
+    label: "Community Degens",
+    value: "20%",
+    suffix: "",
+  },
+  {
+    label: "Token Contract",
+    value: "G4QRtYNRPyxdKwcAqqW3xSeEynDDxEyRvrDT9FJEpump",
+    suffix: "",
+  },
 ];
 
 const BADGES = [
   {
-    id: "liquidity",
-    icon: <Lock size={28} className="text-gold" />,
-    title: "Liquidity Locked",
-    desc: "Liquidity is locked permanently. No rug, we promise. 🐸",
-    color: "from-[oklch(0.76_0.10_82/0.12)] to-[oklch(0.76_0.10_82/0.04)]",
-  },
-  {
     id: "renounced",
     icon: <CheckCircle2 size={28} className="text-pond-green" />,
-    title: "Contract Renounced",
-    desc: "Ownership renounced. The pond belongs to the FORGs.",
+    title: "Memes — 9%",
+    desc: "9% reserved for memes — because that's what we are. The pond runs on vibes.",
     color: "from-[oklch(0.65_0.15_145/0.12)] to-[oklch(0.65_0.15_145/0.04)]",
   },
 ];
@@ -105,13 +119,13 @@ export function Tokenomics() {
             <div className="space-y-5">
               {STATS.map((stat) => (
                 <div
-                  key={stat.label}
+                  key={stat.label + stat.value}
                   className="border-b border-border/30 pb-4 last:border-0"
                 >
                   <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
                     {stat.label}
                   </div>
-                  <div className="font-display font-bold text-foreground text-lg">
+                  <div className="font-display font-bold text-foreground text-sm break-all">
                     {stat.value}
                     {stat.suffix && (
                       <span className="text-gold ml-1 text-sm">
@@ -129,7 +143,7 @@ export function Tokenomics() {
               <div className="space-y-2 w-full">
                 {PIE_DATA.map((seg) => (
                   <div
-                    key={seg.label}
+                    key={`${seg.color}-${seg.pct}`}
                     className="flex items-center justify-between text-sm"
                   >
                     <div className="flex items-center gap-2">
@@ -171,13 +185,13 @@ export function Tokenomics() {
 
               <div className="rounded-2xl p-4 bg-[oklch(0.55_0.12_260/0.08)] border border-[oklch(0.55_0.12_260/0.2)]">
                 <div className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
-                  Tax
+                  The Frog Who Started It All
                 </div>
                 <div className="font-display font-bold text-foreground text-2xl">
-                  0% / 0%
+                  1%
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Buy / Sell — Pure FORG vibes
+                  The OG frog's slice of the pond.
                 </div>
               </div>
             </div>

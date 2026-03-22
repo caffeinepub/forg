@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
-import { SiDiscord, SiTelegram, SiX } from "react-icons/si";
+import { SiTelegram, SiX } from "react-icons/si";
 
 const SOCIALS = [
   {
     id: "twitter",
     icon: <SiX size={22} />,
     label: "Twitter / X",
-    handle: "@FORGcoin",
-    href: "#",
+    handle: "Join the FORG Community",
+    href: "https://x.com/i/communities/2034649883919941893",
     color: "oklch(0.76 0.10 82)",
   },
   {
@@ -16,16 +16,8 @@ const SOCIALS = [
     icon: <SiTelegram size={22} />,
     label: "Telegram",
     handle: "t.me/FORGcoin",
-    href: "#",
+    href: "https://t.me/+tA7rsZMSzSg0OTg0",
     color: "oklch(0.72 0.10 200)",
-  },
-  {
-    id: "discord",
-    icon: <SiDiscord size={22} />,
-    label: "Discord",
-    handle: "discord.gg/FORG",
-    href: "#",
-    color: "oklch(0.55 0.12 260)",
   },
 ];
 
@@ -80,6 +72,8 @@ export function Community() {
             <motion.a
               key={social.id}
               href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -128,6 +122,12 @@ export function Community() {
             size="lg"
             className="bg-gold hover:bg-gold-bright text-[oklch(0.08_0.02_240)] font-bold uppercase tracking-widest rounded-full px-12 py-6 text-base shadow-gold hover:shadow-gold transition-all scale-100 hover:scale-105"
             data-ocid="community.primary_button"
+            onClick={() =>
+              window.open(
+                "https://x.com/i/communities/2034649883919941893",
+                "_blank",
+              )
+            }
           >
             Join The Pond 🐸
           </Button>

@@ -1,9 +1,12 @@
-import { SiDiscord, SiTelegram, SiX } from "react-icons/si";
+import { SiTelegram, SiX } from "react-icons/si";
 
 const FOOTER_SOCIALS = [
   { name: "twitter", icon: <SiX size={18} />, href: "#" },
-  { name: "telegram", icon: <SiTelegram size={18} />, href: "#" },
-  { name: "discord", icon: <SiDiscord size={18} />, href: "#" },
+  {
+    name: "telegram",
+    icon: <SiTelegram size={18} />,
+    href: "https://t.me/+tA7rsZMSzSg0OTg0",
+  },
 ];
 
 export function Footer() {
@@ -39,6 +42,8 @@ export function Footer() {
             <a
               key={s.name}
               href={s.href}
+              target={s.href !== "#" ? "_blank" : undefined}
+              rel={s.href !== "#" ? "noopener noreferrer" : undefined}
               className="w-9 h-9 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-gold hover:border-gold/40 transition-all"
               data-ocid="footer.link"
             >

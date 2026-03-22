@@ -30,8 +30,8 @@ const EXAMPLE_CONFIGS = [
 ];
 
 const POND_STATS = [
-  { id: "members", icon: "💧", label: "Pond Members", value: "12,847" },
-  { id: "pfps", icon: "🐸", label: "PFPs Made", value: "5,291" },
+  { id: "members", icon: "💧", label: "Pond Members", value: "512" },
+  { id: "pfps", icon: "🐸", label: "PFPs Made", value: "0" },
 ];
 
 export function PFPGenerator() {

@@ -147,6 +147,12 @@ export function HeroSection() {
             size="lg"
             className="bg-gold hover:bg-gold-bright text-[oklch(0.08_0.02_240)] font-bold uppercase tracking-widest rounded-full px-10 py-6 text-base shadow-gold hover:shadow-gold transition-all scale-100 hover:scale-105"
             data-ocid="hero.primary_button"
+            onClick={() =>
+              window.open(
+                "https://x.com/i/communities/2034649883919941893",
+                "_blank",
+              )
+            }
           >
             JOIN THE POND
           </Button>

@@ -23,7 +23,7 @@ const STEPS = [
     num: "03",
     icon: <ArrowLeftRight size={28} />,
     title: "Swap for $FORG",
-    desc: "Go to Raydium.io, connect your wallet, paste the $FORG contract address, and swap your SOL for $FORG.",
+    desc: "Get the official $FORG CA, copy and paste it into Phantom search, select FORG and swap SOL for FORG.",
     color: "oklch(0.65 0.15 145)",
   },
   {

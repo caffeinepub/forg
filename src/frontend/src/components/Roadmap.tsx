@@ -5,64 +5,60 @@ const PHASES = [
   {
     id: "phase1",
     phase: "Phase 1",
-    quarter: "Q1 2025",
+    quarter: "Q1 2026",
     title: "The Tadpole Era",
     items: [
-      "Website Launch",
-      "Token Creation",
-      "Community Building",
-      "Social Media Setup",
-      "Initial Liquidity",
+      { text: "Website Launch", completed: true },
+      { text: "Token Creation", completed: true },
+      { text: "Community Building", completed: true },
+      { text: "Initial Liquidity", completed: true },
+      { text: "PFP Generator", completed: false },
+      { text: "1,000 Holders", completed: false },
     ],
-    done: true,
-    active: false,
+    active: true,
     color: "oklch(0.76 0.10 82)",
   },
   {
     id: "phase2",
     phase: "Phase 2",
-    quarter: "Q2 2025",
+    quarter: "Q2 2026",
     title: "The Froglet Rise",
     items: [
-      "CEX Listings",
-      "10,000 Holders",
-      "CoinGecko Listing",
-      "CoinMarketCap",
-      "Influencer Partnerships",
+      { text: "CEX Listings", completed: false },
+      { text: "5,000 Holders", completed: false },
+      { text: "CoinGecko Listing", completed: false },
+      { text: "CoinMarketCap", completed: false },
+      { text: "Influencer Partnerships", completed: false },
     ],
-    done: false,
-    active: true,
+    active: false,
     color: "oklch(0.72 0.10 200)",
   },
   {
     id: "phase3",
     phase: "Phase 3",
-    quarter: "Q3 2025",
+    quarter: "Q3 2026",
     title: "The FORG Kingdom",
     items: [
-      "NFT Collection Drop",
-      "Merch Store",
-      "50,000 Holders",
-      "Tier 1 CEX",
-      "FORG DAO",
+      { text: "NFT Collection Drop", completed: false },
+      { text: "Art Creator Collab", completed: false },
+      { text: "15,000 Holders", completed: false },
+      { text: "Tier 1 CEX", completed: false },
+      { text: "FORG DAO", completed: false },
     ],
-    done: false,
     active: false,
     color: "oklch(0.65 0.15 145)",
   },
   {
     id: "phase4",
     phase: "Phase 4",
-    quarter: "Q4 2025",
+    quarter: "Q4 2026",
     title: "The Pond Ecosystem",
     items: [
-      "FORG Ecosystem",
-      "Cross-Chain Bridge",
-      "Strategic Partnerships",
-      "100,000 Holders",
-      "Moon 🌕",
+      { text: "FORG Ecosystem", completed: false },
+      { text: "Strategic Partnerships", completed: false },
+      { text: "100,000 Holders", completed: false },
+      { text: "Moon 🌕", completed: false },
     ],
-    done: false,
     active: false,
     color: "oklch(0.55 0.12 260)",
   },
@@ -101,7 +97,7 @@ export function Roadmap() {
               className={`relative rounded-2xl p-6 border transition-all ${
                 phase.active
                   ? "border-gold/40 bg-[oklch(0.76_0.10_82/0.06)] shadow-gold-sm"
-                  : phase.done
+                  : phase.items.some((it) => it.completed)
                     ? "border-border/50 glass-card"
                     : "border-border/30 glass-card opacity-70"
               }`}
@@ -125,8 +121,11 @@ export function Roadmap() {
 
               <ul className="space-y-2">
                 {phase.items.map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm">
-                    {phase.done ? (
+                  <li
+                    key={item.text}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    {item.completed ? (
                       <CheckCircle2
                         size={14}
                         className="flex-shrink-0"
@@ -137,10 +136,12 @@ export function Roadmap() {
                     )}
                     <span
                       className={
-                        phase.done ? "text-foreground" : "text-muted-foreground"
+                        item.completed
+                          ? "text-foreground"
+                          : "text-muted-foreground"
                       }
                     >
-                      {item}
+                      {item.text}
                     </span>
                   </li>
                 ))}
