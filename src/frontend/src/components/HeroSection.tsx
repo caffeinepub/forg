@@ -1,20 +1,45 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
+import { useRef, useState } from "react";
 
 export function HeroSection() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+
   return (
     <section
       id="about"
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
     >
+      {/* Poster image — shown instantly, fades out once video is playing */}
+      <div
+        className="absolute inset-0 w-full h-full"
+        style={{
+          zIndex: 0,
+          backgroundImage: `url('/assets/generated/hero-poster.dim_1920x1080.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: videoReady ? 0 : 1,
+          transition: "opacity 1s ease-in-out",
+        }}
+      />
+
       {/* Background video */}
       <video
+        ref={videoRef}
         autoPlay
         muted
         loop
         playsInline
+        preload="auto"
+        poster="/assets/generated/hero-poster.dim_1920x1080.jpg"
+        onCanPlay={() => setVideoReady(true)}
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ zIndex: 0 }}
+        style={{
+          zIndex: 0,
+          opacity: videoReady ? 1 : 0,
+          transition: "opacity 1s ease-in-out",
+        }}
       >
         <source
           src="/assets/16A1BD9D-AF8B-4608-ADC5-8293993A8D6E.mp4"

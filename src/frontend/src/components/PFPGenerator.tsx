@@ -177,14 +177,15 @@ export function PFPGenerator() {
   const activeHat = HEADWEAR.find((h) => h.id === selectedHat);
   const activeFace = FACE.find((f) => f.id === selectedFace);
 
-  // Every layer fills the exact same 340×340 space — no transform scaling
+  // object-fit: fill mirrors ctx.drawImage(img, 0, 0, w, h) exactly —
+  // every layer stretches to fill the same coordinate space, matching the export.
   const layerStyle: React.CSSProperties = {
     position: "absolute",
     top: 0,
     left: 0,
     width: "100%",
     height: "100%",
-    objectFit: "contain",
+    objectFit: "fill",
   };
 
   return (
@@ -208,6 +209,9 @@ export function PFPGenerator() {
           <h2 className="font-display font-extrabold text-4xl md:text-5xl uppercase text-foreground">
             BUILD YOUR <span className="text-gold">FORG PFP</span>
           </h2>
+          <p className="text-muted-foreground/60 text-sm mt-1">
+            (still undergoing updates)
+          </p>
           <p className="text-muted-foreground mt-4 max-w-lg mx-auto">
             Dress up the official FORG mascot. Pick your background, gear, and
             accessories then download your custom PFP.
@@ -283,7 +287,7 @@ export function PFPGenerator() {
             className="xl:sticky xl:top-24 flex flex-col items-center gap-5"
           >
             <div className="relative">
-              {/* Preview container — exactly 340×340, no transform scaling */}
+              {/* Preview container — exactly 340×340, object-fit:fill matches canvas export */}
               <div
                 className="rounded-2xl border-2 border-gold/30 shadow-[0_0_40px_oklch(0.76_0.10_82/0.15)]"
                 style={{

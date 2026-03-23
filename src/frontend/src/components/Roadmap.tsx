@@ -5,15 +5,15 @@ const PHASES = [
   {
     id: "phase1",
     phase: "Phase 1",
-    quarter: "Q1 2026",
     title: "The Tadpole Era",
     items: [
       { text: "Website Launch", completed: true },
       { text: "Token Creation", completed: true },
       { text: "Community Building", completed: true },
       { text: "Initial Liquidity", completed: true },
+      { text: "CTO Takeover", completed: true },
       { text: "PFP Generator", completed: false },
-      { text: "1,000 Holders", completed: false },
+      { text: "250 Holders", completed: true },
     ],
     active: true,
     color: "oklch(0.76 0.10 82)",
@@ -21,11 +21,11 @@ const PHASES = [
   {
     id: "phase2",
     phase: "Phase 2",
-    quarter: "Q2 2026",
     title: "The Froglet Rise",
     items: [
       { text: "CEX Listings", completed: false },
-      { text: "5,000 Holders", completed: false },
+      { text: "Build LQ Pool", completed: false },
+      { text: "500 Holders", completed: false },
       { text: "CoinGecko Listing", completed: false },
       { text: "CoinMarketCap", completed: false },
       { text: "Influencer Partnerships", completed: false },
@@ -36,12 +36,13 @@ const PHASES = [
   {
     id: "phase3",
     phase: "Phase 3",
-    quarter: "Q3 2026",
     title: "The FORG Kingdom",
     items: [
       { text: "NFT Collection Drop", completed: false },
       { text: "Art Creator Collab", completed: false },
-      { text: "15,000 Holders", completed: false },
+      { text: "Collaborating with KOLs", completed: false },
+      { text: "Meme Contest", completed: false },
+      { text: "1,000 Holders", completed: false },
       { text: "Tier 1 CEX", completed: false },
       { text: "FORG DAO", completed: false },
     ],
@@ -51,12 +52,11 @@ const PHASES = [
   {
     id: "phase4",
     phase: "Phase 4",
-    quarter: "Q4 2026",
     title: "The Pond Ecosystem",
     items: [
       { text: "FORG Ecosystem", completed: false },
       { text: "Strategic Partnerships", completed: false },
-      { text: "100,000 Holders", completed: false },
+      { text: "5,000 Holders", completed: false },
       { text: "Moon 🌕", completed: false },
     ],
     active: false,
@@ -113,7 +113,7 @@ export function Roadmap() {
                 className="text-xs uppercase tracking-widest font-bold mb-1"
                 style={{ color: phase.color }}
               >
-                {phase.phase} · {phase.quarter}
+                {phase.phase}
               </div>
               <h3 className="font-display font-bold text-foreground text-lg mb-4 uppercase tracking-wide">
                 {phase.title}
