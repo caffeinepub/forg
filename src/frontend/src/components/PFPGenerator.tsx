@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { usePfpCount, useRegisterPfp } from "@/hooks/useQueries";
 import { Download, Shuffle } from "lucide-react";
 import { motion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // ── Trait definitions ──────────────────────────────────────────────────────────
@@ -27,31 +26,31 @@ const BACKGROUNDS: Background[] = [
     id: "swamp",
     label: "Swamp",
     emoji: "🌿",
-    src: "/assets/generated/bg-swamp.dim_500x500.png",
+    src: "/assets/generated/bg-swamp.dim_1080x1080.png",
   },
   {
     id: "forest",
     label: "Forest",
     emoji: "🌳",
-    src: "/assets/generated/bg-forest.dim_500x500.png",
+    src: "/assets/generated/bg-forest.dim_1080x1080.png",
   },
   {
     id: "pond",
     label: "Lily Pond",
     emoji: "🪷",
-    src: "/assets/generated/bg-pond.dim_500x500.png",
+    src: "/assets/generated/bg-pond.dim_1080x1080.png",
   },
   {
     id: "cult",
     label: "Dark Cult",
     emoji: "🕯️",
-    src: "/assets/generated/bg-cult.dim_500x500.png",
+    src: "/assets/generated/bg-cult.dim_1080x1080.png",
   },
   {
     id: "nightswamp",
     label: "Night Swamp",
     emoji: "🌙",
-    src: "/assets/generated/bg-night-swamp.dim_500x500.png",
+    src: "/assets/generated/bg-night-swamp.dim_1080x1080.png",
   },
 ];
 
@@ -71,7 +70,7 @@ const HEADWEAR: Trait[] = [
     id: "baseball",
     label: "Baseball Cap",
     emoji: "🧢",
-    src: "/assets/generated/custom-baseball-cap.png",
+    src: "/assets/generated/custom-baseball-cap-1080.dim_1080x1080.png",
   },
 ];
 
@@ -84,48 +83,6 @@ const FACE: Trait[] = [
     src: "/assets/uploads/Sunglasses-1.png",
   },
 ];
-
-// ── Layer descriptor ───────────────────────────────────────────────────────────
-
-type LayerDescriptor = {
-  src: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
-
-function makeLayer(
-  src: string,
-  size: number,
-  overrides?: Partial<{ x: number; y: number; w: number; h: number }>,
-): LayerDescriptor {
-  return { src, x: 0, y: 0, w: size, h: size, ...overrides };
-}
-
-// ── Wearable transform state ───────────────────────────────────────────────────
-
-type WearableTransform = {
-  scale: number; // 0.5 – 2.0
-  offsetX: number; // -200 – 200
-  offsetY: number; // -200 – 200
-};
-
-const DEFAULT_SUIT_TRANSFORM: WearableTransform = {
-  scale: 1.0,
-  offsetX: 0,
-  offsetY: 0,
-};
-const DEFAULT_HAT_TRANSFORM: WearableTransform = {
-  scale: 1.0,
-  offsetX: 0,
-  offsetY: 0,
-};
-const DEFAULT_FACE_TRANSFORM: WearableTransform = {
-  scale: 1.0,
-  offsetX: 0,
-  offsetY: 0,
-};
 
 // ── Image cache ────────────────────────────────────────────────────────────────
 
@@ -148,10 +105,8 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const BASE_FROG = "/assets/uploads/Forg-mascot-1.png";
-const SUIT_W = 750;
-const SUIT_H = Math.round(750 * (1024 / 1536));
-const SUIT_X = Math.round((500 - SUIT_W) / 2);
-const SUIT_Y = Math.round((500 - SUIT_H) / 2) + 30;
+const CANVAS_SIZE = 1080;
+const PREVIEW_SIZE = 340;
 
 export function PFPGenerator() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -159,17 +114,6 @@ export function PFPGenerator() {
   const [selectedClothes, setSelectedClothes] = useState(CLOTHES[0].id);
   const [selectedHat, setSelectedHat] = useState(HEADWEAR[0].id);
   const [selectedFace, setSelectedFace] = useState(FACE[0].id);
-  const [rendering, setRendering] = useState(false);
-
-  const [suitTransform, setSuitTransform] = useState<WearableTransform>(
-    DEFAULT_SUIT_TRANSFORM,
-  );
-  const [hatTransform, setHatTransform] = useState<WearableTransform>(
-    DEFAULT_HAT_TRANSFORM,
-  );
-  const [faceTransform, setFaceTransform] = useState<WearableTransform>(
-    DEFAULT_FACE_TRANSFORM,
-  );
 
   const registerPfp = useRegisterPfp();
   const { data: pfpCount } = usePfpCount();
@@ -179,85 +123,34 @@ export function PFPGenerator() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    setRendering(true);
 
-    const size = 500;
-    canvas.width = size;
-    canvas.height = size;
-    ctx.clearRect(0, 0, size, size);
+    canvas.width = CANVAS_SIZE;
+    canvas.height = CANVAS_SIZE;
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
     const bg = BACKGROUNDS.find((b) => b.id === selectedBg);
     const clothes = CLOTHES.find((c) => c.id === selectedClothes);
     const hat = HEADWEAR.find((h) => h.id === selectedHat);
     const face = FACE.find((f) => f.id === selectedFace);
 
-    // Build suit layer with transform
-    let suitLayer: LayerDescriptor | null = null;
-    if (clothes?.src === "/assets/uploads/Mascot-suit-2.png") {
-      const w = Math.round(SUIT_W * suitTransform.scale);
-      const h = Math.round(SUIT_H * suitTransform.scale);
-      const x = SUIT_X + Math.round((SUIT_W - w) / 2) + suitTransform.offsetX;
-      const y = SUIT_Y + Math.round((SUIT_H - h) / 2) + suitTransform.offsetY;
-      suitLayer = makeLayer(clothes.src, size, { x, y, w, h });
-    } else if (clothes?.src) {
-      const w = Math.round(size * suitTransform.scale);
-      const h = Math.round(size * suitTransform.scale);
-      const x = Math.round((size - w) / 2) + suitTransform.offsetX;
-      const y = Math.round((size - h) / 2) + suitTransform.offsetY;
-      suitLayer = makeLayer(clothes.src, size, { x, y, w, h });
-    }
+    const srcs: (string | null)[] = [
+      bg?.src ?? null,
+      BASE_FROG,
+      clothes?.src ?? null,
+      hat?.src ?? null,
+      face?.src ?? null,
+    ];
 
-    // Hat layer with transform
-    let hatLayer: LayerDescriptor | null = null;
-    if (hat?.src) {
-      const w = Math.round(size * hatTransform.scale);
-      const h = Math.round(size * hatTransform.scale);
-      const x = Math.round((size - w) / 2) + hatTransform.offsetX;
-      const y = Math.round((size - h) / 2) + hatTransform.offsetY;
-      hatLayer = makeLayer(hat.src, size, { x, y, w, h });
-    }
-
-    // Face layer with transform
-    let faceLayer: LayerDescriptor | null = null;
-    if (face?.src) {
-      const w = Math.round(size * faceTransform.scale);
-      const h = Math.round(size * faceTransform.scale);
-      const x = Math.round((size - w) / 2) + faceTransform.offsetX;
-      const y = Math.round((size - h) / 2) + faceTransform.offsetY;
-      faceLayer = makeLayer(face.src, size, { x, y, w, h });
-    }
-
-    const layers: LayerDescriptor[] = [
-      bg?.src ? makeLayer(bg.src, size) : null,
-      makeLayer(BASE_FROG, size),
-      suitLayer,
-      hatLayer,
-      faceLayer,
-    ].filter((l): l is LayerDescriptor => l !== null);
-
-    for (const layer of layers) {
+    for (const src of srcs) {
+      if (!src) continue;
       try {
-        const img = await loadImage(layer.src);
-        ctx.drawImage(img, layer.x, layer.y, layer.w, layer.h);
+        const img = await loadImage(src);
+        ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
       } catch {
         // skip failed layer
       }
     }
-
-    setRendering(false);
-  }, [
-    selectedBg,
-    selectedClothes,
-    selectedHat,
-    selectedFace,
-    suitTransform,
-    hatTransform,
-    faceTransform,
-  ]);
-
-  useEffect(() => {
-    drawPFP();
-  }, [drawPFP]);
+  }, [selectedBg, selectedClothes, selectedHat, selectedFace]);
 
   const handleRandomize = () => {
     const rand = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
@@ -265,12 +158,10 @@ export function PFPGenerator() {
     setSelectedClothes(rand(CLOTHES).id);
     setSelectedHat(rand(HEADWEAR).id);
     setSelectedFace(rand(FACE).id);
-    setSuitTransform(DEFAULT_SUIT_TRANSFORM);
-    setHatTransform(DEFAULT_HAT_TRANSFORM);
-    setFaceTransform(DEFAULT_FACE_TRANSFORM);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    await drawPFP();
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
@@ -279,6 +170,21 @@ export function PFPGenerator() {
     link.click();
     registerPfp.mutate();
     toast.success("PFP downloaded! Welcome to the pond! 🐸");
+  };
+
+  const activeBg = BACKGROUNDS.find((b) => b.id === selectedBg);
+  const activeClothes = CLOTHES.find((c) => c.id === selectedClothes);
+  const activeHat = HEADWEAR.find((h) => h.id === selectedHat);
+  const activeFace = FACE.find((f) => f.id === selectedFace);
+
+  // Every layer fills the exact same 340×340 space — no transform scaling
+  const layerStyle: React.CSSProperties = {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
   };
 
   return (
@@ -323,7 +229,6 @@ export function PFPGenerator() {
             viewport={{ once: true }}
             className="space-y-6"
           >
-            {/* Clothes */}
             <TraitPanel
               label="Clothes"
               emoji="🤵"
@@ -335,15 +240,6 @@ export function PFPGenerator() {
               selected={selectedClothes}
               onSelect={setSelectedClothes}
             />
-            {selectedClothes !== "none" && (
-              <WearableControls
-                label="Clothes Adjustment"
-                transform={suitTransform}
-                onChange={setSuitTransform}
-              />
-            )}
-
-            {/* Background */}
             <TraitPanel
               label="Background"
               emoji="🌄"
@@ -355,8 +251,6 @@ export function PFPGenerator() {
               selected={selectedBg}
               onSelect={setSelectedBg}
             />
-
-            {/* Headwear */}
             <TraitPanel
               label="Headwear"
               emoji="🎩"
@@ -368,15 +262,6 @@ export function PFPGenerator() {
               selected={selectedHat}
               onSelect={setSelectedHat}
             />
-            {selectedHat !== "none" && (
-              <WearableControls
-                label="Headwear Adjustment"
-                transform={hatTransform}
-                onChange={setHatTransform}
-              />
-            )}
-
-            {/* Face */}
             <TraitPanel
               label="Face Accessories"
               emoji="👓"
@@ -388,13 +273,6 @@ export function PFPGenerator() {
               selected={selectedFace}
               onSelect={setSelectedFace}
             />
-            {selectedFace !== "none" && (
-              <WearableControls
-                label="Face Accessory Adjustment"
-                transform={faceTransform}
-                onChange={setFaceTransform}
-              />
-            )}
           </motion.div>
 
           {/* ── Preview + buttons ── */}
@@ -402,25 +280,37 @@ export function PFPGenerator() {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="xl:sticky xl:top-24 flex flex-col items-center gap-5 max-h-[calc(100vh-6rem)] overflow-y-auto"
+            className="xl:sticky xl:top-24 flex flex-col items-center gap-5"
           >
             <div className="relative">
+              {/* Preview container — exactly 340×340, no transform scaling */}
               <div
-                className="rounded-2xl overflow-hidden border-2 border-gold/30 shadow-[0_0_40px_oklch(0.76_0.10_82/0.15)]"
-                style={{ width: 340, height: 340 }}
+                className="rounded-2xl border-2 border-gold/30 shadow-[0_0_40px_oklch(0.76_0.10_82/0.15)]"
+                style={{
+                  position: "relative",
+                  width: PREVIEW_SIZE,
+                  height: PREVIEW_SIZE,
+                  overflow: "hidden",
+                }}
               >
-                <canvas
-                  ref={canvasRef}
-                  style={{ width: "100%", height: "100%", display: "block" }}
-                />
+                {activeBg?.src && (
+                  <img src={activeBg.src} alt="" style={layerStyle} />
+                )}
+                <img src={BASE_FROG} alt="FORG mascot" style={layerStyle} />
+                {activeClothes?.src && (
+                  <img src={activeClothes.src} alt="" style={layerStyle} />
+                )}
+                {activeHat?.src && (
+                  <img src={activeHat.src} alt="" style={layerStyle} />
+                )}
+                {activeFace?.src && (
+                  <img src={activeFace.src} alt="" style={layerStyle} />
+                )}
               </div>
-              {rendering && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40">
-                  <span className="text-gold text-sm font-bold animate-pulse">
-                    Rendering...
-                  </span>
-                </div>
-              )}
+
+              {/* Hidden canvas for PNG export at full 1080×1080 */}
+              <canvas ref={canvasRef} style={{ display: "none" }} />
+
               <div className="absolute -bottom-3 -right-3 bg-gold text-[oklch(0.08_0.02_240)] text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
                 $FORG
               </div>
@@ -451,90 +341,6 @@ export function PFPGenerator() {
         </div>
       </div>
     </section>
-  );
-}
-
-// ── Wearable controls sub-component ──────────────────────────────────────────
-
-function WearableControls({
-  label,
-  transform,
-  onChange,
-}: {
-  label: string;
-  transform: WearableTransform;
-  onChange: (t: WearableTransform) => void;
-}) {
-  const set = (key: keyof WearableTransform, val: number) =>
-    onChange({ ...transform, [key]: val });
-
-  return (
-    <div className="glass-card rounded-2xl p-4 space-y-4">
-      <p className="text-xs uppercase tracking-widest text-gold/70 font-bold">
-        ⚙️ {label}
-      </p>
-
-      <div className="space-y-1">
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Size</span>
-          <span className="text-gold font-semibold">
-            {Math.round(transform.scale * 100)}%
-          </span>
-        </div>
-        <Slider
-          min={30}
-          max={200}
-          step={1}
-          value={[Math.round(transform.scale * 100)]}
-          onValueChange={([v]) => set("scale", v / 100)}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Move Left / Right</span>
-          <span className="text-gold font-semibold">
-            {transform.offsetX > 0 ? "+" : ""}
-            {transform.offsetX}px
-          </span>
-        </div>
-        <Slider
-          min={-200}
-          max={200}
-          step={1}
-          value={[transform.offsetX]}
-          onValueChange={([v]) => set("offsetX", v)}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Move Up / Down</span>
-          <span className="text-gold font-semibold">
-            {transform.offsetY > 0 ? "+" : ""}
-            {transform.offsetY}px
-          </span>
-        </div>
-        <Slider
-          min={-200}
-          max={200}
-          step={1}
-          value={[transform.offsetY]}
-          onValueChange={([v]) => set("offsetY", v)}
-          className="w-full"
-        />
-      </div>
-
-      <button
-        type="button"
-        onClick={() => onChange({ scale: 1.0, offsetX: 0, offsetY: 0 })}
-        className="text-xs text-muted-foreground/60 hover:text-gold transition-colors underline underline-offset-2"
-      >
-        Reset to default
-      </button>
-    </div>
   );
 }
 
